@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-console.log('[Cuckoo Code] Preload script 开始执行');
+console.log('[Cuckoo Code] Preload script starting');
 
 // ========== 统一工具系统 (内联到 preload) ==========
 
@@ -437,62 +437,62 @@ window.electronAPI = electronAPI;
 const OVERLAY_HTML = `
 <div id="cuckoo-overlay" class="cuckoo-overlay cuckoo-hidden">
   <div class="cuckoo-header">
-    <span class="cuckoo-title">Cuckoo Code - 命令检测</span>
+    <span class="cuckoo-title">Cuckoo Code - Command Detection</span>
     <button id="cuckoo-btn-minimize" class="cuckoo-btn-icon">—</button>
   </div>
   <div class="cuckoo-body">
-    <!-- 当前项目目录展示区域 -->
+    <!-- Current project directory display area -->
     <div class="cuckoo-section cuckoo-project-dir-section">
       <div class="cuckoo-project-dir-row">
-        <span class="cuckoo-label">当前项目目录</span>
-        <button id="cuckoo-btn-change-dir" class="cuckoo-btn-change-dir" title="点击修改项目目录">🔄 修改</button>
+        <span class="cuckoo-label">Current Project Directory</span>
+        <button id="cuckoo-btn-change-dir" class="cuckoo-btn-change-dir" title="Click to change project directory">🔄 Change</button>
       </div>
       <div id="cuckoo-project-dir-display" class="cuckoo-project-dir-display">
-        <span class="cuckoo-dir-path">未选择</span>
+        <span class="cuckoo-dir-path">Not selected</span>
       </div>
     </div>
     <div class="cuckoo-divider"></div>
-    <!-- 会话列表区域 -->
+    <!-- Session list area -->
     <div class="cuckoo-section cuckoo-session-section">
       <div class="cuckoo-session-header">
-        <span class="cuckoo-label">会话列表</span>
-        <button id="cuckoo-btn-refresh-sessions" class="cuckoo-btn-refresh-sessions" title="刷新会话列表">🔄 刷新</button>
+        <span class="cuckoo-label">Session List</span>
+        <button id="cuckoo-btn-refresh-sessions" class="cuckoo-btn-refresh-sessions" title="Refresh session list">🔄 Refresh</button>
       </div>
       <div id="cuckoo-session-list" class="cuckoo-session-list">
-        <div class="cuckoo-session-empty">暂无会话</div>
+        <div class="cuckoo-session-empty">No sessions</div>
       </div>
     </div>
     <div class="cuckoo-divider"></div>
     <div class="cuckoo-section">
-      <label class="cuckoo-label">检测到任务：<span id="cuckoo-task-status" class="cuckoo-task-status cuckoo-hidden"><span class="cuckoo-spinner"></span>执行中</span></label>
-      <pre id="cuckoo-cmd-preview" class="cuckoo-cmd-preview">暂无</pre>
+      <label class="cuckoo-label">Detected Task: <span id="cuckoo-task-status" class="cuckoo-task-status cuckoo-hidden"><span class="cuckoo-spinner"></span>Executing</span></label>
+      <pre id="cuckoo-cmd-preview" class="cuckoo-cmd-preview">None</pre>
     </div>
     <div class="cuckoo-actions">
-      <button id="cuckoo-btn-init" class="cuckoo-btn cuckoo-btn-primary">初始化项目</button>
+      <button id="cuckoo-btn-init" class="cuckoo-btn cuckoo-btn-primary">Initialize Project</button>
     </div>
     <div class="cuckoo-actions">
-      <button id="cuckoo-btn-send-prompt" class="cuckoo-btn cuckoo-btn-secondary">发送系统提示词</button>
-      <button id="cuckoo-btn-gen-doc" class="cuckoo-btn cuckoo-btn-primary" title="让 AI 生成项目说明文档 (CUCKOO.md)">生成项目说明</button>
+      <button id="cuckoo-btn-send-prompt" class="cuckoo-btn cuckoo-btn-secondary">Send System Prompt</button>
+      <button id="cuckoo-btn-gen-doc" class="cuckoo-btn cuckoo-btn-primary" title="Let AI generate project documentation (CUCKOO.md)">Generate Project Docs</button>
     </div>
     <div class="cuckoo-actions">
-      <button id="cuckoo-btn-manual-parse" class="cuckoo-btn cuckoo-btn-secondary" title="手动触发解析当前页面内容中的工具调用">手动解析</button>
+      <button id="cuckoo-btn-manual-parse" class="cuckoo-btn cuckoo-btn-secondary" title="Manually trigger parsing of tool calls in current page content">Manual Parse</button>
     </div>
     <div id="cuckoo-result-section" class="cuckoo-section cuckoo-hidden">
-      <label class="cuckoo-label">执行结果：</label>
+      <label class="cuckoo-label">Execution Result:</label>
       <div id="cuckoo-result-status" class="cuckoo-result-status"></div>
       <pre id="cuckoo-result-output" class="cuckoo-result-output"></pre>
     </div>
     <div class="cuckoo-section">
       <details id="cuckoo-history">
-        <summary class="cuckoo-label">历史记录</summary>
+        <summary class="cuckoo-label">History</summary>
         <div id="cuckoo-history-list" class="cuckoo-history-list"></div>
-        <button id="cuckoo-btn-clear" class="cuckoo-btn-text">清空历史</button>
+        <button id="cuckoo-btn-clear" class="cuckoo-btn-text">Clear History</button>
       </details>
     </div>
   </div>
 </div>
 <div id="cuckoo-status-badge">
-  <span id="cuckoo-status-dot"></span> Cuckoo Code 运行中
+  <span id="cuckoo-status-dot"></span> Cuckoo Code Running
 </div>
 `;
 
@@ -746,9 +746,9 @@ function escapeHtml(text) {
 }
 
 /**
- * 显示浮动提示弹窗
- * @param {string} text - 提示文本
- * @param {number} duration - 显示时长（毫秒），默认 2200
+ * Show toast notification
+ * @param {string} text - Notification text
+ * @param {number} duration - Display duration (milliseconds), default 2200
  */
 function showToast(text, duration = 2200) {
   let toast = document.getElementById('cuckoo-toast');
@@ -767,8 +767,8 @@ function showToast(text, duration = 2200) {
 }
 
 /**
- * 设置任务状态（检测到任务：后面的执行中提示）
- * @param {boolean} running - 是否执行中
+ * Set task status (Detected Task: Executing indicator)
+ * @param {boolean} running - Whether executing
  */
 function setTaskStatus(running) {
   const status = document.getElementById('cuckoo-task-status');
@@ -778,7 +778,7 @@ function setTaskStatus(running) {
 }
 
 /**
- * 显示覆盖层（移除 hidden 类）
+ * Show overlay (remove hidden class)
  */
 function showOverlay() {
   const el = document.getElementById('cuckoo-overlay');
@@ -786,7 +786,7 @@ function showOverlay() {
 }
 
 /**
- * 隐藏覆盖层（添加 hidden 类）
+ * Hide overlay (add hidden class)
  */
 function hideOverlay() {
   const el = document.getElementById('cuckoo-overlay');
@@ -794,8 +794,8 @@ function hideOverlay() {
 }
 
 /**
- * 显示命令预览并展开覆盖层
- * @param {Object} cmdData - 命令数据对象，包含 command、timestamp、id 等字段
+ * Display command preview and expand overlay
+ * @param {Object} cmdData - Command data object, containing command, timestamp, id, etc.
  */
 function displayCommand(cmdData) {
   currentCommand = cmdData;
@@ -803,7 +803,7 @@ function displayCommand(cmdData) {
   const resultSection = document.getElementById('cuckoo-result-section');
   if (preview) preview.textContent = cmdData.command;
   if (resultSection) resultSection.classList.add('cuckoo-hidden');
-  showToast('发现可执行的命令');
+  showToast('Executable command detected');
   showOverlay();
 }
 /**
@@ -852,15 +852,15 @@ function addHistory(entry) {
 }
 
 /**
- * 渲染历史记录列表
- * 将 commandHistory 中的记录渲染到界面，并为每条记录绑定点击事件以查看详情
+ * Render history list
+ * Render records from commandHistory to the interface and bind click events for each record to view details
  */
 function renderHistory() {
   const list = document.getElementById('cuckoo-history-list');
   if (!list) return;
 
   if (commandHistory.length === 0) {
-    list.innerHTML = '<div style="color:#666;font-size:12px;font-style:italic;padding:8px 0;">暂无记录</div>';
+    list.innerHTML = '<div style="color:#666;font-size:12px;font-style:italic;padding:8px 0;">No records</div>';
     return;
   }
 
@@ -869,7 +869,7 @@ function renderHistory() {
     <div class="cuckoo-history-item" data-id="${escapeHtml(item.id)}">
       <span class="cuckoo-cmd-text">${escapeHtml(truncate(item.command, 60))}</span>
       <span class="cuckoo-cmd-status ${item.canceled ? '' : item.success ? 'success' : 'error'}">
-        ${item.canceled ? '⏹ 已忽略' : item.success ? '✅ 成功' : '❌ 失败'}
+        ${item.canceled ? '⏹ Ignored' : item.success ? '✅ Success' : '❌ Failed'}
       </span>
       <span class="cuckoo-cmd-time">${formatTime(item.timestamp)}</span>
     </div>
@@ -888,10 +888,10 @@ function renderHistory() {
         if (entry.output && resultSection) {
           resultSection.classList.remove('cuckoo-hidden');
           if (resultStatus) {
-            resultStatus.textContent = entry.canceled ? '⏹ 已忽略' : entry.success ? '✅ 执行成功' : '❌ 执行失败';
+            resultStatus.textContent = entry.canceled ? '⏹ Ignored' : entry.success ? '✅ Execution successful' : '❌ Execution failed';
             resultStatus.className = `cuckoo-result-status ${entry.success ? 'success' : 'error'}`;
           }
-          if (resultOutput) resultOutput.textContent = entry.output || '(无输出)';
+          if (resultOutput) resultOutput.textContent = entry.output || '(No output)';
         }
         showOverlay();
       }
