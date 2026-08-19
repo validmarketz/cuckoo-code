@@ -1,56 +1,56 @@
 /**
- * 测试统一工具调用格式解析
+ * 测试统一ToolCall Formatparse
  */
 
 const { WebContentCapturer } = require('./WebContentCapturer');
 const { UnifiedToolManager } = require('./UnifiedToolManager');
 
 async function test() {
-  console.log('=== 测试工具调用解析 ===\n');
+  console.log('=== 测试Toolcallparse ===\n');
 
-  // 创建 toolManager 实例
+  // Create toolManager 实例
   const toolManager = new UnifiedToolManager();
 
-  // 创建 parser 实例
+  // Create parser 实例
   const parser = new WebContentCapturer(toolManager);
 
   // 测试用例
   const testCases = [
     {
-      name: '标准格式 JSON (toolName/params)',
+      name: 'standard format JSON (toolName/params)',
       content: '{"toolName": "file_write", "params": {"file_path": "test.txt", "content": "hello"}, "callId": "call_123"}'
     },
     {
-      name: 'AI 回复格式 (tool/parameters)',
+      name: 'AI replyformat (tool/parameters)',
       content: '{"tool": "file_write", "parameters": {"file_path": "C:\\\\d\\\\SourceCode\\\\2026\\\\at-geo-web\\\\abc.json", "content": ""}}'
     },
     {
-      name: 'JSON 代码块',
+      name: 'JSON code block',
       content: '```json\n{"toolName": "file_write", "params": {"file_path": "test.txt", "content": "hello"}}\n```'
     },
     {
-      name: 'tool 代码块',
+      name: 'tool code block',
       content: '```tool\n{"toolName": "file_write", "params": {"file_path": "test.txt", "content": "hello"}}\n```'
     },
     {
-      name: '无代码块标记的 JSON',
+      name: 'Nonecode blockmarkof JSON',
       content: '{"toolName": "file_write", "params": {"file_path": "test.txt", "content": "hello"}}'
     },
     {
-      name: '包含额外文本',
-      content: '我要写入文件：\n```json\n{"toolName": "file_write", "params": {"file_path": "test.txt", "content": "hello"}}\n```\n请执行。'
+      name: 'contain额外text',
+      content: '我要写入file：\n```json\n{"toolName": "file_write", "params": {"file_path": "test.txt", "content": "hello"}}\n```\npleaseexecute。'
     },
     {
-      name: 'AI 回复风格',
-      content: '好的，我来帮你写入文件。\n\n```json\n{\n  "toolName": "file_write",\n  "params": {\n    "file_path": "src/utils/helper.js",\n    "content": "export function formatDate(date) {\\n  return date.toISOString().split(\\"T\\")[0];\\n}"\n  },\n  "callId": "call_1700000001_abc123"\n}\n```\n\n文件已写入。'
+      name: 'AI reply风格',
+      content: '好of，我来帮你写入file。\n\n```json\n{\n  "toolName": "file_write",\n  "params": {\n    "file_path": "src/utils/helper.js",\n    "content": "export function formatDate(date) {\\n  return date.toISOString().split(\\"T\\")[0];\\n}"\n  },\n  "callId": "call_1700000001_abc123"\n}\n```\n\nfile已写入。'
     },
     {
-      name: '错误格式 - 缺少 toolName',
+      name: 'Errorformat - missing toolName',
       content: '{"params": {"file_path": "test.txt", "content": "hello"}}'
     },
     {
-      name: '普通文本（非工具调用）',
-      content: '这是一段普通的回复，不包含工具调用。'
+      name: '普通text（非Toolcall）',
+      content: '这是一段普通ofreply，notcontainToolcall。'
     }
   ];
 
@@ -60,43 +60,43 @@ async function test() {
 
     const result = parser.parseToolCall(tc.content);
     if (result) {
-      console.log('✅ 解析成功:');
+      console.log('✅ parsesuccess:');
       console.log('  toolName:', result.toolName);
       console.log('  params:', JSON.stringify(result.params));
       console.log('  callId:', result.callId);
     } else {
-      console.log('❌ 未识别为工具调用');
+      console.log('❌ not识别asToolcall');
     }
   }
 
-  // 测试工具执行
-  console.log('\n=== 测试工具执行 ===\n');
+  // 测试Toolexecute
+  console.log('\n=== 测试Toolexecute ===\n');
   const testToolCall = {
     toolName: 'file_write',
     params: {
       file_path: 'test_output.txt',
-      content: '测试内容\n测试时间: ' + new Date().toISOString()
+      content: '测试content\n测试when间: ' + new Date().toISOString()
     },
     callId: 'test_call_001'
   };
 
-  console.log('执行工具:', testToolCall.toolName);
+  console.log('Execute tool:', testToolCall.toolName);
   const result = await toolManager.execute(testToolCall);
-  console.log('执行结果:', result.success ? '✅ 成功' : '❌ 失败');
+  console.log('executeresult:', result.success ? '✅ Success' : '❌ Failed');
   console.log('数据:', result.data);
-  console.log('错误:', result.error);
+  console.log('Error:', result.error);
 
-  // 验证文件
+  // Validatefile
   const fs = require('fs');
   if (fs.existsSync('test_output.txt')) {
     const content = fs.readFileSync('test_output.txt', 'utf-8');
-    console.log('\n文件内容验证:');
+    console.log('\nfilecontentValidate:');
     console.log(content);
     fs.unlinkSync('test_output.txt');
-    console.log('测试文件已清理');
+    console.log('测试file已clean');
   }
 
-  console.log('\n=== 测试完成 ===');
+  console.log('\n=== 测试complete ===');
 }
 
 test().catch(console.error);

@@ -3,31 +3,31 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * 文件编辑工具 - 仿照 Claude Code 的 Edit 工具
- * 在文件中精确替换一段文本（old_string → new_string）
+ * file编辑Tool - 仿照 Claude Code of Edit Tool
+ * 在filein精确替换一段text（old_string → new_string）
  */
 class FileEditTool extends Tool {
   constructor() {
     super(
-      'file_edit', '在文件中精确查找旧文本并替换为新文本（old_string → new_string），用于修改文件的部分内容。',
+      'file_edit', '在filein精确查找旧textand替换as新text（old_string → new_string），for修改fileof部分content。',
       {
         type: 'object',
         properties: {
           file_path: {
             type: 'string',
-            description: '文件的相对路径或绝对路径'
+            description: 'fileofrelativepathor绝对path'
           },
           old_string: {
             type: 'string',
-            description: '要查找的旧文本，必须精确匹配文件内容'
+            description: '要查找of旧text，必须精确匹配filecontent'
           },
           new_string: {
             type: 'string',
-            description: '要替换成的新文本'
+            description: '要替换成of新text'
           },
           replace_all: {
             type: 'boolean',
-            description: '出现多次时是否全部替换，默认 false',
+            description: '出现多次whenwhether全部替换，default false',
             default: false
           }
         },
@@ -39,7 +39,7 @@ class FileEditTool extends Tool {
   }
 
   /**
-   * 执行文件编辑（精确替换）
+   * executefile编辑（精确替换）
    * @param {Object} params - { file_path, old_string, new_string, replace_all? }
    * @returns {Promise<ToolResult>}
    */
@@ -48,15 +48,15 @@ class FileEditTool extends Tool {
 
     try {
       if (old_string === undefined || old_string === null || old_string === '') {
-        return ToolResult.error('old_string 不能为空');
+        return ToolResult.error('old_string not能empty');
       }
       if (new_string === undefined || new_string === null) {
-        return ToolResult.error('new_string 不能为空');
+        return ToolResult.error('new_string not能empty');
       }
 
-      // 规范化路径：将正斜杠转换为反斜杠（Windows兼容）
+      // 规范化path：will正斜杠转换asbackslash（Windowscompatible）
       const normalizedPath = file_path.replace(/\//g, path.sep);
-      // 如果是相对路径且有项目目录，则相对于项目目录解析
+      // if是relativepath且有projectdirectory，thenrelative于projectdirectoryparse
       let resolvedPath = normalizedPath;
       if (!path.isAbsolute(normalizedPath) && projectDir) {
         resolvedPath = path.join(projectDir, normalizedPath);
@@ -66,18 +66,18 @@ class FileEditTool extends Tool {
         resolvedPath = normalizedPath;
       }
 
-      // 检查文件是否存在
+      // checkfilewhetherexists
       if (!fs.existsSync(resolvedPath)) {
-        return ToolResult.error(`文件不存在: ${resolvedPath}`);
+        return ToolResult.error(`filenotexists: ${resolvedPath}`);
       }
 
-      // 读取文件内容
+      // Readingfilecontent
       const content = fs.readFileSync(resolvedPath, 'utf-8');
       console.log("content",JSON.stringify(content))
       console.log("old_string",JSON.stringify(old_string))
       new_string = new_string.replace(/\r?\n/g, '\r\n');
 
-      // 检查 old_string 出现的次数
+      // check old_string 出现of次数
       let occurrences = content.split(old_string).length - 1;
       if (occurrences === 0) {
         old_string = old_string.replace(/\r?\n/g, '\r\n');
@@ -85,33 +85,33 @@ class FileEditTool extends Tool {
       }
       console.log("old_string",JSON.stringify(old_string))
       if (occurrences === 0) {
-        return ToolResult.error(`未找到要替换的文本，请检查 old_string 是否与文件内容精确匹配。文件路径: ${resolvedPath}`);
+        return ToolResult.error(`not found要替换oftext，pleasecheck old_string whether与filecontent精确匹配。filepath: ${resolvedPath}`);
       }
 
 
       if (occurrences > 1 && !replace_all) {
-        return ToolResult.error(`old_string 在文件中出现 ${occurrences} 次，请提供更长的唯一片段，或设置 replace_all: true`);
+        return ToolResult.error(`old_string 在filein出现 ${occurrences} 次，please提供更长of唯一片段，orset replace_all: true`);
       }
 
-      // 执行替换
+      // execute替换
       const newContent = replace_all
         ? content.split(old_string).join(new_string)
         : content.replace(old_string, new_string);
 
-      // 写回文件
+      // 写回file
       fs.writeFileSync(resolvedPath, newContent, 'utf-8');
 
       const absolutePath = path.resolve(resolvedPath);
-      console.log(`[FileEditTool] 文件已编辑: ${absolutePath}, 替换 ${occurrences} 处`);
+      console.log(`[FileEditTool] file已编辑: ${absolutePath}, 替换 ${occurrences} 处`);
 
       return ToolResult.success({
-        message: `文件已编辑: ${absolutePath}`,
+        message: `file已编辑: ${absolutePath}`,
         path: absolutePath,
         replacedCount: occurrences,
         bytes: Buffer.byteLength(newContent, 'utf-8')
       });
     } catch (err) {
-      return ToolResult.error(`编辑文件失败: ${err.message}`);
+      return ToolResult.error(`编辑fileFailed: ${err.message}`);
     }
   }
 }

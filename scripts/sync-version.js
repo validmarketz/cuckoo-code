@@ -1,6 +1,6 @@
 /**
- * 从 GitHub Actions 的 tag 名（GITHUB_REF_NAME）提取版本号，
- * 同步到 package.json 和 package-lock.json。
+ * from GitHub Actions of tag 名（GITHUB_REF_NAME）extract版this号，
+ * 同步to package.json and package-lock.json。
  * 用法：node scripts/sync-version.js
  */
 const fs = require('fs');
@@ -10,7 +10,7 @@ const tag = process.env.GITHUB_REF_NAME || '';
 const version = tag.replace(/^v/, '').trim();
 
 if (!version || !/^\d+\.\d+\.\d+/.test(version)) {
-  console.error('[sync-version] 无法从 tag 提取版本号: ' + JSON.stringify(tag));
+  console.error('[sync-version] None法from tag extract版this号: ' + JSON.stringify(tag));
   process.exit(1);
 }
 

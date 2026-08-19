@@ -2,7 +2,7 @@ const { Tool, ToolResult } = require('./ToolRegistry');
 const fs = require('fs');
 const path = require('path');
 
-// 需要忽略的目录（与 main.js 的 getDirectoryTree 一致）
+// needignoreofdirectory（与 main.js of getDirectoryTree 一致）
 const IGNORED_DIRS = new Set([
   'node_modules', 'target', 'build', 'dist', 'out',
   '.git', '.svn', '.hg',
@@ -13,12 +13,12 @@ const IGNORED_DIRS = new Set([
   'bin', 'obj',
 ]);
 
-// 匹配结果上限，防止超大目录爆炸
+// 匹配result上限，prevent超大directory爆炸
 const MAX_RESULTS = 1000;
 
 /**
- * 将 glob 模式转换为正则表达式
- * 支持：* 匹配单层内任意字符、** 匹配任意层目录、? 匹配单个字符
+ * will glob pattern转换as正then表达式
+ * support：* 匹配单层internal任意字符、** 匹配任意层directory、? 匹配单count字符
  */
 function globToRegex(pattern) {
   let regex = '';
@@ -40,7 +40,7 @@ function globToRegex(pattern) {
 }
 
 /**
- * 递归遍历目录，收集匹配 glob 模式的文件
+ * 递归遍历directory，收集匹配 glob patternoffile
  */
 function walkDir(dir, baseDir, regex, results) {
   if (results.length >= MAX_RESULTS) return;
@@ -48,17 +48,17 @@ function walkDir(dir, baseDir, regex, results) {
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
   } catch (e) {
-    return; // 无权限等，跳过
+    return; // None权限等，skip
   }
   for (const entry of entries) {
     if (results.length >= MAX_RESULTS) return;
-    if (entry.name.startsWith('.')) continue; // 隐藏文件
+    if (entry.name.startsWith('.')) continue; // hidefile
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       if (IGNORED_DIRS.has(entry.name)) continue;
       walkDir(fullPath, baseDir, regex, results);
     } else if (entry.isFile()) {
-      // 统一使用 / 分隔符匹配
+      // 统一use / 分隔符匹配
       const rel = path.relative(baseDir, fullPath).split(path.sep).join('/');
       if (regex.test(rel)) {
         results.push(rel);
@@ -68,23 +68,23 @@ function walkDir(dir, baseDir, regex, results) {
 }
 
 /**
- * Glob 搜索工具 - 仿照 Claude Code 的 Glob 工具
- * 按 glob 模式递归搜索项目中的文件
+ * Glob 搜索Tool - 仿照 Claude Code of Glob Tool
+ * 按 glob pattern递归搜索projectinoffile
  */
 class GlobTool extends Tool {
   constructor() {
     super(
-      'file_glob', '按 glob 模式递归搜索项目文件，返回匹配的相对路径列表（自动跳过 node_modules 等目录）。',
+      'file_glob', '按 glob pattern递归搜索projectfile，return匹配ofrelativepathlist（自动skip node_modules 等directory）。',
       {
         type: 'object',
         properties: {
           pattern: {
             type: 'string',
-            description: 'glob 匹配模式，如 **/*.java、src/**/*.js、*.json'
+            description: 'glob 匹配pattern，如 **/*.java、src/**/*.js、*.json'
           },
           path: {
             type: 'string',
-            description: '搜索的起始目录（相对路径），默认项目根目录'
+            description: '搜索of起始directory（relativepath），defaultproject根directory'
           }
         },
         required: ['pattern'],
@@ -95,7 +95,7 @@ class GlobTool extends Tool {
   }
 
   /**
-   * 执行 glob 搜索
+   * execute glob 搜索
    * @param {Object} params - { pattern, path?, projectDir? }
    * @returns {Promise<ToolResult>}
    */
@@ -104,10 +104,10 @@ class GlobTool extends Tool {
 
     try {
       if (!pattern || typeof pattern !== 'string') {
-        return ToolResult.error('pattern 不能为空');
+        return ToolResult.error('pattern not能empty');
       }
 
-      // 确定搜索起始目录
+      // determine搜索起始directory
       let baseDir;
       if (searchPath) {
         const normalized = searchPath.replace(/\//g, path.sep);
@@ -121,10 +121,10 @@ class GlobTool extends Tool {
       }
 
       if (!fs.existsSync(baseDir)) {
-        return ToolResult.error(`目录不存在: ${baseDir}`);
+        return ToolResult.error(`directorynotexists: ${baseDir}`);
       }
       if (!fs.statSync(baseDir).isDirectory()) {
-        return ToolResult.error(`不是目录: ${baseDir}`);
+        return ToolResult.error(`not是directory: ${baseDir}`);
       }
 
       const regex = globToRegex(pattern);
@@ -132,17 +132,17 @@ class GlobTool extends Tool {
       walkDir(baseDir, baseDir, regex, results);
       results.sort((a, b) => a.localeCompare(b));
 
-      console.log(`[GlobTool] 搜索完成: pattern=${pattern}, baseDir=${baseDir}, 匹配 ${results.length} 个文件`);
+      console.log(`[GlobTool] 搜索complete: pattern=${pattern}, baseDir=${baseDir}, 匹配 ${results.length} countfile`);
 
       return ToolResult.success({
-        message: `找到 ${results.length} 个匹配文件`,
+        message: `找to ${results.length} count匹配file`,
         pattern: pattern,
         baseDir: baseDir,
         files: results,
         truncated: results.length >= MAX_RESULTS
       });
     } catch (err) {
-      return ToolResult.error(`Glob 搜索失败: ${err.message}`);
+      return ToolResult.error(`Glob 搜索Failed: ${err.message}`);
     }
   }
 }

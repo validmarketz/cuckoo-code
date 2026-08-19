@@ -2,7 +2,7 @@ const { Tool, ToolResult } = require('./ToolRegistry');
 const fs = require('fs');
 const path = require('path');
 
-// 需要忽略的目录（与 main.js / GlobTool 一致）
+// needignoreofdirectory（与 main.js / GlobTool 一致）
 const IGNORED_DIRS = new Set([
   'node_modules', 'target', 'build', 'dist', 'out',
   '.git', '.svn', '.hg',
@@ -13,15 +13,15 @@ const IGNORED_DIRS = new Set([
   'bin', 'obj',
 ]);
 
-// 匹配结果上限，防止输出爆炸
+// 匹配result上限，preventOutput爆炸
 const MAX_MATCHES = 200;
-// 跳过超大文件（1MB）
+// skip超大file（1MB）
 const MAX_FILE_SIZE = 1024 * 1024;
-// 单行输出截断长度
+// 单行Output截断length
 const MAX_LINE_LEN = 500;
 
 /**
- * 将 glob 模式转换为正则表达式（与 GlobTool 相同的实现）
+ * will glob pattern转换as正then表达式（与 GlobTool 相同of实现）
  */
 function globToRegex(pattern) {
   let regex = '';
@@ -43,7 +43,7 @@ function globToRegex(pattern) {
 }
 
 /**
- * 截断过长的行
+ * 截断过长of行
  */
 function truncateLine(line) {
   if (line.length <= MAX_LINE_LEN) return line;
@@ -51,7 +51,7 @@ function truncateLine(line) {
 }
 
 /**
- * 递归遍历目录，搜索文件内容
+ * 递归遍历directory，搜索filecontent
  */
 function grepDir(dir, baseDir, regex, fileRegex, outputMode, context, matches, counts) {
   if (matches.length >= MAX_MATCHES) return;
@@ -69,18 +69,18 @@ function grepDir(dir, baseDir, regex, fileRegex, outputMode, context, matches, c
       if (IGNORED_DIRS.has(entry.name)) continue;
       grepDir(fullPath, baseDir, regex, fileRegex, outputMode, context, matches, counts);
     } else if (entry.isFile()) {
-      // 相对路径（/ 分隔）
+      // relativepath（/ 分隔）
       const rel = path.relative(baseDir, fullPath).split(path.sep).join('/');
-      // 文件类型过滤
+      // fileType过滤
       if (fileRegex && !fileRegex.test(rel)) continue;
       // 大小限制
       let stat;
       try { stat = fs.statSync(fullPath); } catch (e) { continue; }
       if (stat.size > MAX_FILE_SIZE) continue;
-      // 读取内容
+      // Readingcontent
       let content;
       try { content = fs.readFileSync(fullPath, 'utf-8'); } catch (e) { continue; }
-      // 跳过二进制文件
+      // skip二进制file
       if (content.includes('\0')) continue;
 
       const lines = content.split('\n');
@@ -92,7 +92,7 @@ function grepDir(dir, baseDir, regex, fileRegex, outputMode, context, matches, c
             counts[rel] = (counts[rel] || 0) + 1;
           } else {
             fileMatches.push({ line: i + 1, content: truncateLine(lines[i]) });
-            // 上下文行
+            // context行
             if (context > 0) {
               for (let j = Math.max(0, i - context); j <= Math.min(lines.length - 1, i + context); j++) {
                 if (j === i) continue;
@@ -110,41 +110,41 @@ function grepDir(dir, baseDir, regex, fileRegex, outputMode, context, matches, c
 }
 
 /**
- * Grep 搜索工具 - 仿照 Claude Code 的 Grep 工具
- * 在项目文件中按正则表达式或文本搜索内容
+ * Grep 搜索Tool - 仿照 Claude Code of Grep Tool
+ * 在projectfilein按正then表达式ortext搜索content
  */
 class GrepTool extends Tool {
   constructor() {
     super(
-      'file_grep', '在项目文件中按正则表达式或文本搜索，返回匹配的文件、行号与行内容。',
+      'file_grep', '在projectfilein按正then表达式ortext搜索，return匹配offile、行号与行content。',
       {
         type: 'object',
         properties: {
           pattern: {
             type: 'string',
-            description: '要搜索的正则表达式或纯文本'
+            description: '要搜索of正then表达式or纯text'
           },
           path: {
             type: 'string',
-            description: '搜索的起始目录（相对路径），默认项目根目录'
+            description: '搜索of起始directory（relativepath），defaultproject根directory'
           },
           glob: {
             type: 'string',
-            description: '限定搜索的文件类型，如 *.java、**/*.js（可选）'
+            description: '限定搜索offileType，如 *.java、**/*.js（可选）'
           },
           ignore_case: {
             type: 'boolean',
-            description: '忽略大小写，默认 false',
+            description: 'ignore大小写，default false',
             default: false
           },
           output_mode: {
             type: 'string',
-            description: 'content（输出匹配行）或 count（仅统计数量），默认 content',
+            description: 'content（Output匹配行）or count（仅统计数量），default content',
             default: 'content'
           },
           context: {
             type: 'number',
-            description: '匹配行前后各输出的上下文行数，默认 0',
+            description: '匹配行前后各Outputofcontext行数，default 0',
             default: 0
           }
         },
@@ -156,7 +156,7 @@ class GrepTool extends Tool {
   }
 
   /**
-   * 执行 grep 搜索
+   * execute grep 搜索
    * @param {Object} params - { pattern, path?, glob?, ignore_case?, output_mode?, context?, projectDir? }
    * @returns {Promise<ToolResult>}
    */
@@ -165,18 +165,18 @@ class GrepTool extends Tool {
 
     try {
       if (!pattern || typeof pattern !== 'string') {
-        return ToolResult.error('pattern 不能为空');
+        return ToolResult.error('pattern not能empty');
       }
 
-      // 编译正则
+      // 编译正then
       let regex;
       try {
         regex = new RegExp(pattern, ignore_case ? 'i' : '');
       } catch (e) {
-        return ToolResult.error('无效的正则表达式: ' + e.message + '，如需搜索纯文本请转义特殊字符');
+        return ToolResult.error('None效of正then表达式: ' + e.message + '，如need搜索纯textpleaseescape特殊字符');
       }
 
-      // 确定搜索起始目录
+      // determine搜索起始directory
       let baseDir;
       if (searchPath) {
         const normalized = searchPath.replace(/\//g, path.sep);
@@ -190,13 +190,13 @@ class GrepTool extends Tool {
       }
 
       if (!fs.existsSync(baseDir)) {
-        return ToolResult.error(`目录不存在: ${baseDir}`);
+        return ToolResult.error(`directorynotexists: ${baseDir}`);
       }
       if (!fs.statSync(baseDir).isDirectory()) {
-        return ToolResult.error(`不是目录: ${baseDir}`);
+        return ToolResult.error(`not是directory: ${baseDir}`);
       }
 
-      // 文件类型过滤
+      // fileType过滤
       let fileRegex = null;
       if (glob) {
         fileRegex = globToRegex(glob);
@@ -206,14 +206,14 @@ class GrepTool extends Tool {
       const counts = {};
       grepDir(baseDir, baseDir, regex, fileRegex, output_mode, context, matches, counts);
 
-      // 按文件路径排序
+      // 按filepath排序
       matches.sort((a, b) => a.file.localeCompare(b.file));
 
-      console.log(`[GrepTool] 搜索完成: pattern=${pattern}, baseDir=${baseDir}, 匹配文件 ${matches.length} 个`);
+      console.log(`[GrepTool] 搜索complete: pattern=${pattern}, baseDir=${baseDir}, 匹配file ${matches.length} count`);
 
       if (output_mode === 'count') {
         return ToolResult.success({
-          message: `搜索完成，共匹配 ${Object.keys(counts).length} 个文件`,
+          message: `搜索complete，Total匹配 ${Object.keys(counts).length} countfile`,
           pattern: pattern,
           baseDir: baseDir,
           counts: counts,
@@ -222,14 +222,14 @@ class GrepTool extends Tool {
       }
 
       return ToolResult.success({
-        message: `搜索完成，共 ${matches.length} 个文件包含匹配`,
+        message: `搜索complete，Total ${matches.length} countfilecontain匹配`,
         pattern: pattern,
         baseDir: baseDir,
         matches: matches,
         truncated: matches.length >= MAX_MATCHES
       });
     } catch (err) {
-      return ToolResult.error(`Grep 搜索失败: ${err.message}`);
+      return ToolResult.error(`Grep 搜索Failed: ${err.message}`);
     }
   }
 }

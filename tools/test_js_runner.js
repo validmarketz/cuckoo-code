@@ -28,16 +28,16 @@ const NL = String.fromCharCode(10);
 
   const cases = [
     {
-      name: 'writeFile + readFile + editFile + log + 返回值',
+      name: 'writeFile + readFile + editFile + log + return值',
       code: [
         'const p = "test.txt";',
         'await writeFile(p, ["line1", "line2", "line3"].join(String.fromCharCode(10)));',
         'const content = await readFile(p);',
-        'log("读取到长度:", content.length);',
+        'log("Readingtolength:", content.length);',
         'const r = await editFile(p, "line2", "LINE2");',
         'log(r);',
         'const c2 = await readFile(p);',
-        'if (!c2.includes("LINE2")) throw new Error("edit 未生效");',
+        'if (!c2.includes("LINE2")) throw new Error("edit not生效");',
         'return "OK: " + c2.trim().split(String.fromCharCode(10)).join("|");',
       ].join(NL)
     },
@@ -47,16 +47,16 @@ const NL = String.fromCharCode(10);
         'await writeFile("src/a.js", "const TODO_A = 1;");',
         'await writeFile("src/b.js", "nothing here");',
         'const files = await glob("src/**/*.js");',
-        'log("glob 文件:", files);',
+        'log("glob file:", files);',
         'const matches = await grep("TODO_A", { glob: "*.js" });',
-        'log("grep 结果:", matches);',
-        'if (!files.includes("src/a.js")) throw new Error("glob 未找到文件");',
+        'log("grep result:", matches);',
+        'if (!files.includes("src/a.js")) throw new Error("glob not foundfile");',
         'await deleteFile("src/b.js");',
         'return "files=" + files.length + ", b.js 已删除=" + !(await glob("src/b.js")).length;',
       ].join(NL)
     },
     {
-      name: 'bash 退出码（非零退出不抛异常）',
+      name: 'bash 退出码（非零退出not抛exception）',
       allowEnvLimit: true,
       code: [
         'const ok = await bash("echo hello");',
@@ -67,12 +67,12 @@ const NL = String.fromCharCode(10);
       ].join(NL)
     },
     {
-      name: '错误处理：文件不存在抛出异常',
+      name: 'Error处理：filenotexists抛出exception',
       expectError: true,
-      code: 'await readFile("不存在的文件.txt");'
+      code: 'await readFile("notexistsoffile.txt");'
     },
     {
-      name: '错误处理：editFile old_string 不匹配',
+      name: 'Error处理：editFile old_string not匹配',
       expectError: true,
       code: [
         'await writeFile("x.txt", "abc");',
@@ -80,25 +80,25 @@ const NL = String.fromCharCode(10);
       ].join(NL)
     },
     {
-      name: '沙箱隔离：require/process/Function/eval 均不可用',
+      name: '沙箱隔离：require/process/Function/eval allnot可用',
       code: [
         'const out = [];',
-        'try { require("fs"); out.push("FAIL: require 可用"); } catch (e) { out.push("require 被禁用"); }',
+        'try { require("fs"); out.push("FAIL: require 可用"); } catch (e) { out.push("require be禁用"); }',
         'if (typeof process !== "undefined") out.push("FAIL: process 可见");',
-        'try { [].constructor.constructor("return 1"); out.push("FAIL: Function 构造器可用"); } catch (e) { out.push("Function 构造器被禁用"); }',
-        'try { eval("1+1"); out.push("FAIL: eval 可用"); } catch (e) { out.push("eval 被禁用"); }',
+        'try { [].constructor.constructor("return 1"); out.push("FAIL: Function 构造器可用"); } catch (e) { out.push("Function 构造器be禁用"); }',
+        'try { eval("1+1"); out.push("FAIL: eval 可用"); } catch (e) { out.push("eval be禁用"); }',
         'log(out.join(" | "));',
-        'return "sandbox 检查完成";',
+        'return "sandbox checkcomplete";',
       ].join(NL)
     },
     {
-      name: '危险命令拒绝',
+      name: '危险command拒绝',
       code: [
         'try {',
         '  await bash("format C:");',
-        '  return "FAIL: 危险命令未被拒绝";',
+        '  return "FAIL: 危险commandnotbe拒绝";',
         '} catch (e) {',
-        '  return "危险命令已拒绝: " + e.message;',
+        '  return "危险command已拒绝: " + e.message;',
         '}',
       ].join(NL)
     },
@@ -110,16 +110,16 @@ const NL = String.fromCharCode(10);
     const result = await runner.run(c.code, tmpDir);
     console.log(JSON.stringify(result, null, 2));
     if (c.expectError) {
-      if (result.success || !result.error) { console.log('!!! 预期抛错但未抛错'); failed++; }
+      if (result.success || !result.error) { console.log('!!! 预期抛错但not抛错'); failed++; }
     } else if (c.allowEnvLimit && !result.success && /EPERM|spawn/i.test(result.error || '')) {
-      console.log('>>> 该用例受当前执行环境限制（spawn EPERM），跳过判定');
+      console.log('>>> this用例受currentexecuteenvironment限制（spawn EPERM），skip判定');
     } else if (!result.success) {
       failed++;
     }
   }
 
-  console.log(NL + '========== 汇总 ==========');
-  console.log((cases.length - failed) + '/' + cases.length + ' 个用例成功');
+  console.log(NL + '========== summary ==========');
+  console.log((cases.length - failed) + '/' + cases.length + ' count用例success');
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
   process.exit(failed > 0 ? 1 : 0);

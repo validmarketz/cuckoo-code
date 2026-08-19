@@ -1,6 +1,6 @@
 /**
- * 网页内容捕获器
- * 负责监听 DeepSeek 聊天页面，捕获 AI 回复并解析工具调用
+ * 网页content捕获器
+ * 负责listen DeepSeek 聊天page，捕获 AI replyandParse tool call
  */
 
 class WebContentCapturer {
@@ -16,12 +16,12 @@ class WebContentCapturer {
     this.lastProcessedMessage = '';
     this.isRunning = false;
     this.pollTimer = null;
-    this.onToolCall = null; // 回调函数
-    this.onMessage = null;  // 新消息回调
+    this.onToolCall = null; // 回调function
+    this.onMessage = null;  // 新message回调
   }
 
   /**
-   * 设置工具调用回调
+   * setToolcall回调
    * @param {Function} callback - (toolCall) => Promise<void>
    */
   setToolCallHandler(callback) {
@@ -29,7 +29,7 @@ class WebContentCapturer {
   }
 
   /**
-   * 设置新消息回调
+   * set新message回调
    * @param {Function} callback - (message, role) => void
    */
   setMessageHandler(callback) {
@@ -37,17 +37,17 @@ class WebContentCapturer {
   }
 
   /**
-   * 启动监听
+   * 启动listen
    */
   start() {
     if (this.isRunning) return;
     this.isRunning = true;
-    console.log('[WebCapturer] 开始监听网页内容...');
+    console.log('[WebCapturer] startlisten网页content...');
     this.poll();
   }
 
   /**
-   * 停止监听
+   * stoplisten
    */
   stop() {
     this.isRunning = false;
@@ -55,11 +55,11 @@ class WebContentCapturer {
       clearTimeout(this.pollTimer);
       this.pollTimer = null;
     }
-    console.log('[WebCapturer] 停止监听');
+    console.log('[WebCapturer] stoplisten');
   }
 
   /**
-   * 轮询检查新消息
+   * 轮询check新message
    */
   async poll() {
     if (!this.isRunning) return;
@@ -74,32 +74,32 @@ class WebContentCapturer {
   }
 
   /**
-   * 检查新消息
+   * check新message
    */
   async checkNewMessages() {
     const messages = this.extractMessages();
     if (!messages.length) return;
 
-    // 获取最新的助手消息
+    // get最新of助手message
     const lastAssistantMsg = this.getLastAssistantMessage(messages);
     if (!lastAssistantMsg) return;
 
-    // 去重：只处理新消息
+    // 去重：只处理新message
     const contentHash = this.hashContent(lastAssistantMsg.content);
     if (contentHash === this.lastProcessedMessage) return;
     this.lastProcessedMessage = contentHash;
 
-    console.log('[WebCapturer] 发现新助手消息:', lastAssistantMsg.content.substring(0, 100));
+    console.log('[WebCapturer] find新助手message:', lastAssistantMsg.content.substring(0, 100));
 
-    // 触发消息回调
+    // triggermessage回调
     if (this.onMessage) {
       this.onMessage(lastAssistantMsg.content, 'assistant');
     }
 
-    // 尝试解析工具调用
+    // 尝试Parse tool call
     const toolCall = this.parseToolCall(lastAssistantMsg.content);
     if (toolCall) {
-      console.log('[WebCapturer] 检测到工具调用:', toolCall);
+      console.log('[WebCapturer] detectedToolcall:', toolCall);
       if (this.onToolCall) {
         await this.onToolCall(toolCall);
       }
@@ -107,15 +107,15 @@ class WebContentCapturer {
   }
 
   /**
-   * 提取页面所有消息
+   * extractpageallmessage
    * @returns {Array<{role: string, content: string, element: Element}>}
    */
   extractMessages() {
     const messages = [];
 
-    // 尝试多种选择器策略
+    // 尝试多种select器策略
     const selectors = [
-      // DeepSeek 可能的选择器
+      // DeepSeek possibleofselect器
       '.ds-markdown',
       '.markdown-body',
       '[data-testid="message"]',
@@ -136,7 +136,7 @@ class WebContentCapturer {
             messages.push({ role, content: content.trim(), element: el });
           }
         });
-        if (messages.length > 0) break; // 找到一种匹配就停止
+        if (messages.length > 0) break; // 找to一种匹配就stop
       }
     }
 
@@ -144,22 +144,22 @@ class WebContentCapturer {
   }
 
   /**
-   * 检测消息角色
+   * detectmessage角色
    * @param {Element} el
    * @returns {'user'|'assistant'|'unknown'}
    */
   detectRole(el) {
-    // 检查 data-role 属性
+    // check data-role attribute
     const role = el.getAttribute('data-role');
     if (role === 'assistant' || role === 'bot') return 'assistant';
     if (role === 'user' || role === 'human') return 'user';
 
-    // 检查 class
+    // check class
     const className = el.className || '';
     if (className.includes('assistant') || className.includes('bot')) return 'assistant';
     if (className.includes('user') || className.includes('human')) return 'user';
 
-    // 检查父元素
+    // check父element
     const parent = el.closest('[data-role], .message, .chat-message');
     if (parent) {
       const pRole = parent.getAttribute('data-role');
@@ -173,7 +173,7 @@ class WebContentCapturer {
   }
 
   /**
-   * 获取最新的助手消息
+   * get最新of助手message
    * @param {Array} messages
    * @returns {Object|null}
    */
@@ -187,11 +187,11 @@ class WebContentCapturer {
   }
 
   /**
-   * 解析工具调用
-   * 支持多种格式：
-   * 1. 标准格式: {"toolName": "...", "params": {...}, "callId": "..."}
-   * 2. 代码块格式: ```json {...} ```
-   * 3. tool 代码块: ```tool {...} ```
+   * Parse tool call
+   * support多种format：
+   * 1. standard format: {"toolName": "...", "params": {...}, "callId": "..."}
+   * 2. code blockformat: ```json {...} ```
+   * 3. tool code block: ```tool {...} ```
    * @param {string} content
    * @returns {Object|null}
    */
@@ -200,45 +200,45 @@ class WebContentCapturer {
 
     const str = content.trim();
 
-    // 1. 尝试直接解析 JSON
+    // 1. 尝试directlyparse JSON
     let parsed = null;
     try {
       parsed = JSON.parse(str);
     } catch (e) {
-      // 不是直接的 JSON，尝试提取代码块
+      // not是directlyof JSON，尝试extractcode block
     }
 
-    // 2. 提取代码块
+    // 2. extractcode block
     if (!parsed) {
-      // ```json ... ``` 或 ```tool ... ``` 或 ``` ... ```
+      // ```json ... ``` or ```tool ... ``` or ``` ... ```
       const codeBlockMatch = str.match(/^```(?:json|tool)?\s*\n?(\{[\s\S]*\})\s*```?$/);
       if (codeBlockMatch) {
         try {
           parsed = JSON.parse(codeBlockMatch[1]);
         } catch (e) {
-          console.log('[WebCapturer] 代码块 JSON 解析失败:', e.message);
+          console.log('[WebCapturer] code block JSON parseFailed:', e.message);
         }
       }
     }
 
-    // 3. 尝试在文本中查找 JSON 对象
+    // 3. 尝试在textin查找 JSON object
     if (!parsed) {
       const jsonMatch = str.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         try {
           parsed = JSON.parse(jsonMatch[0]);
         } catch (e) {
-          // 忽略
+          // ignore
         }
       }
     }
 
     if (!parsed) return null;
 
-    // 验证必要字段 - 支持多种字段名
+    // Validate必要字段 - support多种字段名
     if (!parsed.toolName && !parsed.tool) return null;
 
-    // 标准化输出
+    // normalizeOutput
     return {
       toolName: parsed.toolName || parsed.tool,
       params: parsed.params || parsed.parameters || parsed.arguments || {},
@@ -247,7 +247,7 @@ class WebContentCapturer {
   }
 
   /**
-   * 简单哈希用于去重
+   * 简单哈希for去重
    */
   hashContent(str) {
     let hash = 0;
