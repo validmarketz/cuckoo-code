@@ -1,13 +1,13 @@
 /**
- * 工具注册表 - 管理所有可用工具
+ * Tool注册表 - 管理allAvailable Tools
  */
 
 class Tool {
   constructor(name, description, parameters, jsApi) {
     this.name = name;
     this.description = description;
-    this.parameters = parameters; // JSON Schema 格式
-    this.jsApi = jsApi || null; // JS 调用签名，如 'editFile(file_path, old_string, new_string)'
+    this.parameters = parameters; // JSON Schema format
+    this.jsApi = jsApi || null; // JS call签名，如 'editFile(file_path, old_string, new_string)'
   }
 
   async execute(params) {
@@ -15,7 +15,7 @@ class Tool {
   }
 
   /**
-   * 获取工具描述，用于发送给 AI
+   * getTool描述，forsend给 AI
    */
   getDescription() {
     return {
@@ -33,23 +33,23 @@ class ToolRegistry {
   }
 
   /**
-   * 注册工具
-   * @param {Tool} tool - 工具实例
+   * 注册Tool
+   * @param {Tool} tool - Tool实例
    */
   register(tool) {
     if (!tool || !tool.name) {
-      throw new Error('工具必须有 name 属性');
+      throw new Error('Tool必须有 name attribute');
     }
     if (this.tools.has(tool.name)) {
-      console.warn(`[ToolRegistry] 工具 ${tool.name} 已存在，将被覆盖`);
+      console.warn(`[ToolRegistry] Tool ${tool.name} 已exists，willbe覆盖`);
     }
     this.tools.set(tool.name, tool);
-    console.log(`[ToolRegistry] 注册工具: ${tool.name}`);
+    console.log(`[ToolRegistry] 注册Tool: ${tool.name}`);
   }
 
   /**
-   * 获取工具
-   * @param {string} name - 工具名称
+   * getTool
+   * @param {string} name - Tool name
    * @returns {Tool|undefined}
    */
   get(name) {
@@ -57,26 +57,26 @@ class ToolRegistry {
   }
 
   /**
-   * 执行工具
-   * @param {string} name - 工具名称
-   * @param {Object} params - 参数
+   * Execute tool
+   * @param {string} name - Tool name
+   * @param {Object} params - Parameter
    * @returns {Promise<ToolResult>}
    */
   async execute(name, params) {
     const tool = this.tools.get(name);
     if (!tool) {
-      return ToolResult.error(`未找到工具: ${name}`);
+      return ToolResult.error(`not foundTool: ${name}`);
     }
     try {
-      // 验证参数（可选，这里简化处理）
+      // ValidateParameter（可选，这里简化处理）
       return await tool.execute(params);
     } catch (err) {
-      return ToolResult.error(`工具执行失败: ${err.message}`);
+      return ToolResult.error(`ToolExecution failed: ${err.message}`);
     }
   }
 
   /**
-   * 获取所有工具描述
+   * getallTool描述
    * @returns {Array}
    */
   getDescriptions() {
@@ -84,21 +84,21 @@ class ToolRegistry {
   }
 
   /**
-   * 获取格式化的工具列表，用于 Prompt
+   * getformat化ofToollist，for Prompt
    * @returns {string}
    */
   getFormattedToolsForPrompt() {
     const descriptions = this.getDescriptions();
-    if (descriptions.length === 0) return '暂无可用工具';
+    if (descriptions.length === 0) return '暂NoneAvailable Tools';
 
     return descriptions.map((t, i) => {
-      const params = t.parameters.properties ? Object.keys(t.parameters.properties).join(', ') : '无';
-      return `${i + 1}. **${t.name}** - ${t.description}\n   参数: ${params}`;
+      const params = t.parameters.properties ? Object.keys(t.parameters.properties).join(', ') : 'None';
+      return `${i + 1}. **${t.name}** - ${t.description}\n   Parameter: ${params}`;
     }).join('\n\n');
   }
 
   /**
-   * 获取工具数量
+   * getTool数量
    * @returns {number}
    */
   size() {
@@ -106,7 +106,7 @@ class ToolRegistry {
   }
 
   /**
-   * 列出所有工具名称
+   * listallTool name
    * @returns {string[]}
    */
   listNames() {
@@ -114,12 +114,12 @@ class ToolRegistry {
   }
 
   /**
-   * 获取格式化的 JS API 列表，用于 Prompt（AI 生成 JS 代码调用这些函数）
+   * getformat化of JS API list，for Prompt（AI generate JS 代码call这些function）
    * @returns {string}
    */
   getFormattedJsApiForPrompt() {
     const descriptions = this.getDescriptions();
-    if (descriptions.length === 0) return '暂无可用工具';
+    if (descriptions.length === 0) return '暂NoneAvailable Tools';
 
     return descriptions.map((t, i) => {
       const sig = t.jsApi ? '\`' + t.jsApi + '\`' : '\`' + t.name + '(...)\`';
@@ -129,7 +129,7 @@ class ToolRegistry {
 }
 
 /**
- * 统一的工具执行结果
+ * 统一ofToolexecuteresult
  */
 class ToolResult {
   constructor(success, data, error) {
@@ -148,9 +148,9 @@ class ToolResult {
 
   toString() {
     if (this.success) {
-      return `✅ 成功: ${JSON.stringify(this.data)}`;
+      return `✅ Success: ${JSON.stringify(this.data)}`;
     } else {
-      return `❌ 失败: ${this.error}`;
+      return `❌ Failed: ${this.error}`;
     }
   }
 }

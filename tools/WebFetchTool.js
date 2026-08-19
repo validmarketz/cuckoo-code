@@ -1,50 +1,50 @@
 const { Tool, ToolResult } = require('./ToolRegistry');
 
 /**
- * 网页访问工具
- * 用于访问 http/https 网页，获取响应内容。
- * 第一版仅实现 fetch 模式（Node 内置 fetch），适合 API 和静态网页。
+ * 网页访问Tool
+ * for访问 http/https 网页，get响shouldcontent。
+ * 第一版仅实现 fetch pattern（Node internal置 fetch），适合 API and静态网页。
  */
 class WebFetchTool extends Tool {
   constructor() {
     super(
       'web_fetch',
-      '访问网页或 API。使用 Node 内置 fetch 获取 http/https URL 的响应内容。适合获取网页文本、JSON 数据、API 响应等。注意：不执行 JavaScript，若网页内容由 JS 动态渲染，请使用其他浏览器工具。',
+      '访问网页or API。use Node internal置 fetch get http/https URL of响shouldcontent。适合get网页text、JSON 数据、API 响should等。Note：notexecute JavaScript，if网页content由 JS 动态渲染，pleaseuseotherbrowserTool。',
       {
         type: 'object',
         properties: {
           url: {
             type: 'string',
-            description: '要访问的网址，支持 http/https'
+            description: '要访问of网址，support http/https'
           },
           method: {
             type: 'string',
-            description: 'HTTP 方法，默认 GET',
+            description: 'HTTP method, default GET',
             default: 'GET',
             enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
           },
           headers: {
             type: 'object',
-            description: '请求头，如 { "Authorization": "Bearer xxx" }',
+            description: 'Request headers, e.g., { "Authorization": "Bearer xxx" }',
             default: {}
           },
           body: {
             type: 'string',
-            description: '请求体（POST/PUT 等使用），字符串'
+            description: 'Request body (used for POST/PUT etc.), string'
           },
           timeout: {
             type: 'number',
-            description: '超时毫秒，默认 15000',
+            description: 'Timeout in milliseconds, default 15000',
             default: 15000
           },
           maxSize: {
             type: 'number',
-            description: '响应体最大字节数，默认 512000（500KB），超出截断',
+            description: '响should体最大bytes数，default 512000（500KB），超出截断',
             default: 512000
           },
           responseType: {
             type: 'string',
-            description: '返回格式: auto (根据 content-type 自动)、json、text',
+            description: 'returnformat: auto (according to content-type 自动)、json、text',
             default: 'auto',
             enum: ['auto', 'json', 'text']
           }
@@ -57,7 +57,7 @@ class WebFetchTool extends Tool {
   }
 
   /**
-   * 执行网页访问
+   * execute网页访问
    * @param {Object} params - { url, method?, headers?, body?, timeout?, maxSize?, responseType? }
    * @returns {Promise<ToolResult>}
    */
@@ -73,7 +73,7 @@ class WebFetchTool extends Tool {
     } = params;
 
     if (!url || typeof url !== 'string') {
-      return ToolResult.error('url 不能为空');
+      return ToolResult.error('url not能empty');
     }
 
     // 安全限制：只允许 http/https
@@ -81,13 +81,13 @@ class WebFetchTool extends Tool {
     try {
       parsedUrl = new URL(url);
     } catch (err) {
-      return ToolResult.error('无效的 URL: ' + url);
+      return ToolResult.error('None效of URL: ' + url);
     }
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-      return ToolResult.error('仅支持 http/https 协议');
+      return ToolResult.error('仅support http/https 协议');
     }
 
-    // 校验超时和 maxSize
+    // 校验超whenand maxSize
     const safeTimeout = typeof timeout === 'number' && timeout > 0 ? Math.min(timeout, 15000) : 15000;
     const safeMaxSize = typeof maxSize === 'number' && maxSize > 0 ? Math.min(maxSize, 512000) : 512000;
 
@@ -108,7 +108,7 @@ class WebFetchTool extends Tool {
 
       const response = await fetch(url, requestOptions);
 
-      // 流式读取响应体，限制大小；整体超时由 AbortController 控制
+      // streamingReading响should体，限制大小；整体超when由 AbortController 控制
       const reader = response.body ? response.body.getReader() : null;
       let receivedBytes = 0;
       let chunks = [];
@@ -125,7 +125,7 @@ class WebFetchTool extends Tool {
               chunks.push(value.slice(0, remaining));
             }
             truncated = true;
-            try { await reader.cancel(); } catch (_) { /* 忽略取消错误 */ }
+            try { await reader.cancel(); } catch (_) { /* ignorecancelError */ }
             break;
           }
           chunks.push(value);
@@ -137,13 +137,13 @@ class WebFetchTool extends Tool {
       const buffer = Buffer.concat(chunks.map(c => Buffer.from(c)));
       const rawText = buffer.toString('utf8');
 
-      // 根据 responseType 处理响应内容
+      // according to responseType 处理响shouldcontent
       let bodyResult;
       if (responseType === 'json') {
         try {
           bodyResult = JSON.parse(rawText);
         } catch (err) {
-          return ToolResult.error('响应不是合法 JSON: ' + err.message);
+          return ToolResult.error('响shouldnot是合法 JSON: ' + err.message);
         }
       } else if (responseType === 'text') {
         bodyResult = rawText;
@@ -154,14 +154,14 @@ class WebFetchTool extends Tool {
           try {
             bodyResult = JSON.parse(rawText);
           } catch (err) {
-            bodyResult = rawText; // 解析失败，返回原始文本
+            bodyResult = rawText; // parseFailed，return原始text
           }
         } else {
           bodyResult = rawText;
         }
       }
 
-      // 提取响应头
+      // extract响should头
       const responseHeaders = {};
       if (response.headers && response.headers.forEach) {
         response.headers.forEach((value, key) => {
@@ -184,9 +184,9 @@ class WebFetchTool extends Tool {
     } catch (err) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
-        return ToolResult.error('请求超时 (超过 ' + safeTimeout + 'ms)');
+        return ToolResult.error('please求超when (超过 ' + safeTimeout + 'ms)');
       }
-      return ToolResult.error('请求失败: ' + err.message);
+      return ToolResult.error('please求Failed: ' + err.message);
     }
   }
 }

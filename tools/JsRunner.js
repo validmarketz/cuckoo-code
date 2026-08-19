@@ -1,12 +1,12 @@
 /**
- * JsRunner - 在受限的 Node vm 沙箱中执行 AI 生成的 JavaScript 工具代码
+ * JsRunner - 在受限of Node vm 沙箱inexecute AI generated JavaScript Tool代码
  *
  * 设计要点：
- * - 通过 vm.createContext 创建沙箱，禁用字符串代码生成（eval / Function 构造器均被禁用）
- * - AI 代码无法访问 require / process / global 等 Node 能力，只能使用注入的工具函数
- * - 工具函数（readFile / readFileWithLines / writeFile / editFile / glob / grep / bash / deleteFile / mysql / log）
- *   通过唯一的 __hostBridge 桥接函数回到主进程执行，宿主函数从不向沙箱抛出宿主对象
- * - 每个工具调用都带执行截止时间检查，防止死循环；整体运行有 60 秒超时
+ * - through vm.createContext Create沙箱，禁用string代码generate（eval / Function 构造器allbe禁用）
+ * - AI 代码None法访问 require / process / global 等 Node 能力，只能use注入ofToolfunction
+ * - Toolfunction（readFile / readFileWithLines / writeFile / editFile / glob / grep / bash / deleteFile / mysql / log）
+ *   through唯一of __hostBridge 桥接function回tomain processexecute，宿主functionfromnot向沙箱抛出宿主object
+ * - 每countToolcall都带execute截止when间check，prevent死循环；整体run有 60 秒超when
  */
 
 const vm = require('vm');
@@ -15,16 +15,16 @@ const path = require('path');
 const { DANGEROUS_CMDS } = require('./BashTool');
 const { decodeOutput, normalizeCommand } = require('./decodeOutput');
 
-// 同步执行超时（vm timeout，覆盖无 await 的死循环）
+// 同步execute超when（vm timeout，覆盖None await of死循环）
 const SYNC_TIMEOUT = 30 * 1000;
-// 整体运行截止时间（配合宿主桥接检查，覆盖 async 死循环）
+// 整体run截止when间（配合宿主桥接check，覆盖 async 死循环）
 const RUN_DEADLINE = 60 * 1000;
-// 输出长度上限
+// Outputlength上限
 const OUTPUT_LIMIT = 20000;
 
 /**
- * 沙箱初始化脚本：在沙箱上下文内定义所有工具函数
- * 注意：该脚本运行在沙箱 realm 内，其抛出的 Error 也是沙箱 realm 对象，无逃逸风险
+ * 沙箱initializescript：在沙箱contextinternal定义allToolfunction
+ * Note：thisscriptrun在沙箱 realm internal，其抛出of Error 也是沙箱 realm object，None逃逸risk
  */
 const BOOTSTRAP = [
 "'use strict';",
@@ -47,9 +47,9 @@ const BOOTSTRAP = [
 "  async function __call(name, args) {",
 "    var resText = await __hostBridge(name, JSON.stringify(args == null ? {} : args));",
 "    var res;",
-"    try { res = JSON.parse(resText); } catch (e) { throw new Error('工具结果解析失败: ' + e.message); }",
+"    try { res = JSON.parse(resText); } catch (e) { throw new Error('ToolresultparseFailed: ' + e.message); }",
 "    if (!res || res.success !== true) {",
-"      throw new Error((res && res.error) || ('工具 ' + name + ' 执行失败'));",
+"      throw new Error((res && res.error) || ('Tool ' + name + ' Execution failed'));",
 "    }",
 "    return res.data;",
 "  }",
@@ -99,14 +99,14 @@ const BOOTSTRAP = [
 "  };",
 "",
 "  if (!globalThis.projectDir) {",
-"    globalThis.log('[提示] 尚未初始化项目目录，相对路径将基于系统目录解析。可点击覆盖层“初始化项目”。');",
+"    globalThis.log('[prompt] 尚notInitialize Projectdirectory，relativepathwill基于systemdirectoryparse。可点击overlay“Initialize Project”。');",
 "  }",
 "})();",
 "",
 ].join('\n');
 
 /**
- * 解析命令工作目录（相对路径基于项目目录）
+ * parsecommandworkdirectory（relativepath基于projectdirectory）
  */
 function resolveDir(dir, projectDir) {
   if (!dir) return projectDir || process.env.USERPROFILE || path.resolve('.');
@@ -117,15 +117,15 @@ function resolveDir(dir, projectDir) {
 }
 
 /**
- * 执行 shell 命令（JS API 专用实现）
- * 与 JSON 工具的 bash 不同：非零退出码不视为失败，而是通过 exitCode/error 字段返回，
- * 让 AI 代码可以像普通 shell 一样判断结果。
+ * execute shell command（JS API 专用实现）
+ * 与 JSON Toolof bash not同：非零退出码nottreat asFailed，而是through exitCode/error 字段return，
+ * 让 AI 代码can像普通 shell 一样judgeresult。
  */
 function runBash(args, projectDir) {
   const command = normalizeCommand(String(args.command || '').trim());
-  if (!command) return Promise.resolve({ success: false, error: 'command 不能为空' });
+  if (!command) return Promise.resolve({ success: false, error: 'command not能empty' });
   if (DANGEROUS_CMDS.some((pattern) => pattern.test(command))) {
-    return Promise.resolve({ success: false, error: '命令被安全策略拒绝（危险命令）: ' + command });
+    return Promise.resolve({ success: false, error: 'commandbe安全策略拒绝（危险command）: ' + command });
   }
   const timeout = typeof args.timeout === 'number' && args.timeout > 0 ? args.timeout : 30000;
   const cwd = resolveDir(args.cwd, projectDir);
@@ -143,7 +143,7 @@ function runBash(args, projectDir) {
             stdout: out,
             stderr: err,
             exitCode: typeof error.code === 'number' ? error.code : 1,
-            error: error.killed ? '命令执行超时或被终止' : (err && err.trim() ? err.trim() : ('命令执行失败 (exit code ' + (typeof error.code === 'number' ? error.code : 'unknown') + ')')),
+            error: error.killed ? 'commandexecute超whenorbe终止' : (err && err.trim() ? err.trim() : ('Command execution failed (exit code ' + (typeof error.code === 'number' ? error.code : 'unknown') + ')')),
           },
         });
       } else {
@@ -157,7 +157,7 @@ function runBash(args, projectDir) {
 }
 
 /**
- * 安全的 JSON 序列化（处理循环引用等异常）
+ * 安全of JSON 序列化（处理循环引用等exception）
  */
 function safeStringify(value) {
   try {
@@ -166,39 +166,39 @@ function safeStringify(value) {
     try {
       return String(value);
     } catch (e2) {
-      return '[无法序列化的返回值]';
+      return '[None法序列化ofreturn值]';
     }
   }
 }
 
 class JsRunner {
   /**
-   * @param {import('./ToolRegistry').ToolRegistry} registry 工具注册表
+   * @param {import('./ToolRegistry').ToolRegistry} registry Tool注册表
    */
   constructor(registry) {
     this.registry = registry;
   }
 
   /**
-   * 执行 AI 生成的 JS 工具代码
-   * @param {string} code - AI 生成的 JavaScript 代码（无需函数包裹，支持顶层 await）
-   * @param {string|null} projectDir - 当前项目目录（相对路径基准）
+   * execute AI generated JS Tool代码
+   * @param {string} code - AI generated JavaScript 代码（Noneneedfunction包裹，support顶层 await）
+   * @param {string|null} projectDir - currentprojectdirectory（relativepath基准）
    * @returns {Promise<{success: boolean, output?: string, error?: string}>}
    */
   async run(code, projectDir) {
     if (!code || typeof code !== 'string' || !code.trim()) {
-      return { success: false, error: '无效的 JS 代码' };
+      return { success: false, error: 'None效of JS 代码' };
     }
 
     const startTime = Date.now();
     const deadlineMs = RUN_DEADLINE;
 
-    // 唯一跨域桥接函数：AI 代码中的每个工具调用都通过它回到主进程执行。
-    // 注意：该函数绝不向沙箱抛出宿主对象（错误一律包装成 { success:false, error } 结果），
-    // 避免沙箱内出现宿主 realm 的 Error / Function 逃逸通道。
+    // 唯一跨域桥接function：AI 代码inof每countToolcall都through它回tomain processexecute。
+    // Note：thisfunction绝not向沙箱抛出宿主object（Error一律包装成 { success:false, error } result），
+    // avoid沙箱internal出现宿主 realm of Error / Function 逃逸通道。
     const hostBridge = async (op, argsJson) => {
       if (Date.now() - startTime > deadlineMs) {
-        return JSON.stringify({ success: false, error: 'JS 脚本执行超时（' + Math.round(deadlineMs / 1000) + ' 秒）' });
+        return JSON.stringify({ success: false, error: 'JS scriptexecute超when（' + Math.round(deadlineMs / 1000) + ' 秒）' });
       }
       let args = {};
       try {
@@ -213,12 +213,12 @@ class JsRunner {
       } else {
         const tool = this.registry.get(op);
         if (!tool) {
-          result = { success: false, error: '未知工具: ' + op };
+          result = { success: false, error: 'Unknown tool: ' + op };
         } else {
           try {
             result = await tool.execute(Object.assign({}, args, { projectDir }));
           } catch (err) {
-            result = { success: false, error: '工具 ' + op + ' 执行异常: ' + (err.message || String(err)) };
+            result = { success: false, error: 'Tool ' + op + ' execution exception: ' + (err.message || String(err)) };
           }
         }
       }
@@ -233,9 +233,9 @@ class JsRunner {
     Object.defineProperty(sandbox, '__projectDir', {
       value: projectDir || null, enumerable: true, writable: false, configurable: false,
     });
-    // 截断沙箱对象与桥接函数的原型链，阻止经 constructor/__proto__ 逃逸到宿主 realm
-    try { Object.setPrototypeOf(sandbox, null); } catch (e) { /* 尽力而为 */ }
-    try { Object.setPrototypeOf(hostBridge, null); } catch (e) { /* 尽力而为 */ }
+    // 截断沙箱object与桥接functionof原型链，阻止经 constructor/__proto__ 逃逸to宿主 realm
+    try { Object.setPrototypeOf(sandbox, null); } catch (e) { /* 尽力而as */ }
+    try { Object.setPrototypeOf(hostBridge, null); } catch (e) { /* 尽力而as */ }
 
     let context;
     try {
@@ -244,7 +244,7 @@ class JsRunner {
         name: 'cuckoo-js-sandbox',
       });
     } catch (err) {
-      // 兜底：极少数环境下 null 原型沙箱不可用
+      // fallback：极少数environment下 null 原型沙箱not可用
       const fallback = {};
       fallback.__hostBridge = hostBridge;
       fallback.__projectDir = projectDir || null;
@@ -257,29 +257,29 @@ class JsRunner {
     try {
       vm.runInContext(BOOTSTRAP, context, { filename: 'cuckoo-js-api.js' });
     } catch (err) {
-      return { success: false, error: '沙箱初始化失败: ' + (err.message || String(err)) };
+      return { success: false, error: '沙箱initializeFailed: ' + (err.message || String(err)) };
     }
 
-    // 包装为 async IIFE：支持顶层 await、return 返回值
+    // 包装as async IIFE：support顶层 await、return return值
     const script = new vm.Script('(async () => {\n' + code + '\n})()', { filename: 'cuckoo-js-tool-script.js' });
 
     let settleTimer = null;
     try {
       const deadline = new Promise((_resolve, reject) => {
         settleTimer = setTimeout(
-          () => reject(new Error('JS 脚本执行超时（' + Math.round(deadlineMs / 1000) + ' 秒）')),
+          () => reject(new Error('JS scriptexecute超when（' + Math.round(deadlineMs / 1000) + ' 秒）')),
           deadlineMs
         );
       });
 
       const ret = await Promise.race([script.runInContext(context, { timeout: SYNC_TIMEOUT }), deadline]);
 
-      // 收集 log() 输出
+      // 收集 log() Output
       let logs = [];
       try {
         const logsJson = vm.runInContext('JSON.stringify(globalThis.__logs || [])', context);
         logs = JSON.parse(logsJson);
-      } catch (e) { /* 忽略日志收集失败 */ }
+      } catch (e) { /* ignorelog收集Failed */ }
 
       const parts = [];
       if (Array.isArray(logs) && logs.length > 0) {
@@ -291,13 +291,13 @@ class JsRunner {
 
       let output = parts.filter(Boolean).join('\n\n');
       if (output.length > OUTPUT_LIMIT) {
-        output = output.slice(0, OUTPUT_LIMIT) + '\n...[输出过长已截断]...';
+        output = output.slice(0, OUTPUT_LIMIT) + '\n...[Output过长已截断]...';
       }
 
-      return { success: true, output: output || '(脚本执行完成，无输出)' };
+      return { success: true, output: output || '(Script execution completed, no output)' };
     } catch (err) {
-      console.error('[JsRunner] 脚本执行失败:', err && err.stack ? err.stack : String(err));
-      console.error('[JsRunner] [诊断] 失败代码(JSON转义): ' + JSON.stringify(code));
+      console.error('[JsRunner] scriptExecution failed:', err && err.stack ? err.stack : String(err));
+      console.error('[JsRunner] [Diagnosis] Failed代码(JSONescape): ' + JSON.stringify(code));
       return { success: false, error: err && err.message ? err.message : String(err) };
     } finally {
       if (settleTimer) clearTimeout(settleTimer);

@@ -3,7 +3,7 @@ const { exec } = require('child_process');
 const path = require('path');
 const { decodeOutput, normalizeCommand } = require('./decodeOutput');
 
-// 危险命令列表（与 main.js 的 execute-command 一致），匹配的命令会被拒绝
+// 危险commandlist（与 main.js of execute-command 一致），匹配ofcommand会be拒绝
 const DANGEROUS_CMDS = [
   /^rm\s+-rf\s+\//i,
   /^format\s+/i,
@@ -17,27 +17,27 @@ const DANGEROUS_CMDS = [
 ];
 
 /**
- * Bash 执行工具 - 仿照 Claude Code 的 Bash 工具
- * 执行 shell 命令并返回输出（Windows 使用 cmd.exe，Linux/Mac 使用 sh，跨平台）
+ * Bash Execute tool - 仿照 Claude Code of Bash Tool
+ * execute shell commandandreturnOutput（Windows use cmd.exe，Linux/Mac use sh，跨平台）
  */
 class BashTool extends Tool {
   constructor() {
     super(
-      'bash', '执行 shell 命令（Windows 使用 cmd.exe），返回 stdout/stderr/exitCode。危险命令会被安全策略拒绝。',
+      'bash', 'execute shell command（Windows use cmd.exe），return stdout/stderr/exitCode。危险command会be安全策略拒绝。',
       {
         type: 'object',
         properties: {
           command: {
             type: 'string',
-            description: '要执行的 shell 命令'
+            description: '要executeof shell command'
           },
           cwd: {
             type: 'string',
-            description: '命令的工作目录（相对路径），默认项目根目录'
+            description: 'commandofworkdirectory（relativepath），defaultproject根directory'
           },
           timeout: {
             type: 'number',
-            description: '超时时间（毫秒），默认 30000',
+            description: '超whenwhen间（毫秒），default 30000',
             default: 30000
           }
         },
@@ -49,7 +49,7 @@ class BashTool extends Tool {
   }
 
   /**
-   * 执行 shell 命令
+   * execute shell command
    * @param {Object} params - { command, cwd?, timeout?, projectDir? }
    * @returns {Promise<ToolResult>}
    */
@@ -58,21 +58,21 @@ class BashTool extends Tool {
 
     try {
       if (!command || typeof command !== 'string') {
-        return ToolResult.error('command 不能为空');
+        return ToolResult.error('command not能empty');
       }
 
       const trimmed = normalizeCommand(command.trim());
       if (!trimmed) {
-        return ToolResult.error('command 不能为空');
+        return ToolResult.error('command not能empty');
       }
 
-      // 危险命令检查
+      // 危险commandcheck
       if (DANGEROUS_CMDS.some((p) => p.test(trimmed))) {
-        console.log('[BashTool] ⚠️ 拒绝危险命令:', trimmed);
-        return ToolResult.error('命令被安全策略拒绝（匹配危险命令列表）: ' + trimmed);
+        console.log('[BashTool] ⚠️ 拒绝危险command:', trimmed);
+        return ToolResult.error('commandbe安全策略拒绝（匹配危险commandlist）: ' + trimmed);
       }
 
-      // 确定工作目录
+      // determineworkdirectory
       let workDir;
       if (cwd) {
         const normalized = cwd.replace(/\//g, path.sep);
@@ -85,7 +85,7 @@ class BashTool extends Tool {
         workDir = process.env.USERPROFILE || process.env.HOME || 'C:\\';
       }
 
-      console.log(`[BashTool] 执行命令: ${trimmed}, cwd=${workDir}`);
+      console.log(`[BashTool] executecommand: ${trimmed}, cwd=${workDir}`);
 
       return await new Promise((resolve) => {
         exec(
@@ -102,13 +102,13 @@ class BashTool extends Tool {
             const err = decodeOutput(stderr);
             if (error) {
               resolve(ToolResult.error(
-                '命令执行失败: ' + error.message + String.fromCharCode(10) +
-                'stdout: ' + (out || '(空)') + String.fromCharCode(10) +
-                'stderr: ' + (err || '(空)')
+                'Command execution failed: ' + error.message + String.fromCharCode(10) +
+                'stdout: ' + (out || '(empty)') + String.fromCharCode(10) +
+                'stderr: ' + (err || '(empty)')
               ));
             } else {
               resolve(ToolResult.success({
-                message: '命令执行成功',
+                message: 'Command executed successfully',
                 command: trimmed,
                 cwd: workDir,
                 stdout: out,
@@ -120,7 +120,7 @@ class BashTool extends Tool {
         );
       });
     } catch (err) {
-      return ToolResult.error(`命令执行异常: ${err.message}`);
+      return ToolResult.error(`commandexecution exception: ${err.message}`);
     }
   }
 }

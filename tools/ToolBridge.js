@@ -1,6 +1,6 @@
 /**
- * 工具桥接器 - 在 preload 中使用
- * 连接 WebContentCapturer、UnifiedToolManager 和 Electron IPC
+ * Tool桥接器 - 在 preload inuse
+ * 连接 WebContentCapturer、UnifiedToolManager and Electron IPC
  */
 
 const { toolManager } = require('./UnifiedToolManager');
@@ -13,8 +13,8 @@ class ToolBridge {
   }
 
   /**
-   * 初始化桥接器
-   * @param {Object} electronAPI - electronAPI 对象
+   * initialize桥接器
+   * @param {Object} electronAPI - electronAPI object
    */
   init(electronAPI) {
     if (this.isInitialized) return;
@@ -22,12 +22,12 @@ class ToolBridge {
     this.electronAPI = electronAPI;
     this.capturer = new WebContentCapturer(toolManager);
 
-    // 设置工具调用处理器
+    // setToolcallHandlers
     this.capturer.setToolCallHandler(async (toolCall) => {
-      console.log('[ToolBridge] 执行工具调用:', toolCall);
+      console.log('[ToolBridge] Execute tool call:', toolCall);
       const result = await toolManager.execute(toolCall);
 
-      // 通过 IPC 发送结果到主进程（可选，用于日志/历史记录）
+      // through IPC sendresulttomain process（可选，forlog/历史record）
       if (this.electronAPI && this.electronAPI.executeTool) {
         await this.electronAPI.executeTool({
           toolName: toolCall.toolName,
@@ -39,17 +39,17 @@ class ToolBridge {
       return result;
     });
 
-    // 设置消息处理器
+    // setmessageHandlers
     this.capturer.setMessageHandler((content, role) => {
-      console.log('[ToolBridge] 新消息:', role, content.substring(0, 100));
+      console.log('[ToolBridge] 新message:', role, content.substring(0, 100));
     });
 
     this.isInitialized = true;
-    console.log('[ToolBridge] 初始化完成');
+    console.log('[ToolBridge] initializecomplete');
   }
 
   /**
-   * 启动内容捕获
+   * 启动content捕获
    */
   startCapturing() {
     if (this.capturer) {
@@ -58,7 +58,7 @@ class ToolBridge {
   }
 
   /**
-   * 停止内容捕获
+   * stopcontent捕获
    */
   stopCapturing() {
     if (this.capturer) {
@@ -67,7 +67,7 @@ class ToolBridge {
   }
 
   /**
-   * 手动触发工具调用解析（用于测试）
+   * 手动triggerToolcallparse（for测试）
    * @param {string} content
    */
   async testParseToolCall(content) {
@@ -76,7 +76,7 @@ class ToolBridge {
   }
 
   /**
-   * 获取工具系统提示词
+   * getToolsystem prompt
    * @returns {string}
    */
   getSystemPrompt() {
@@ -84,7 +84,7 @@ class ToolBridge {
   }
 
   /**
-   * 获取工具列表描述
+   * getToollist描述
    * @returns {string}
    */
   getToolsDescription() {
@@ -92,7 +92,7 @@ class ToolBridge {
   }
 }
 
-// 创建全局实例
+// Create全局实例
 const toolBridge = new ToolBridge();
 
 // 导出
